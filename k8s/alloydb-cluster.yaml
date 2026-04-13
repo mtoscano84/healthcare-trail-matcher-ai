@@ -22,6 +22,6 @@ spec:
     resources:
       cpu: 2
       memory: 8Gi
-    disks:
-      - name: DataDisk
-        size: 50Gi
+      disks:
+        - name: DataDisk
+          size: 50Gi
