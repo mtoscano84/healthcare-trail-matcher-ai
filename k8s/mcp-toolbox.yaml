@@ -1,0 +1,121 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-tools-config
+  namespace: mcp-system
+data:
+  tools.yaml: |
+    sources:
+      healthcare-db:
+        kind: postgres
+        host: al-healthcare-db-rw-ilb.data.svc.cluster.local
+        port: 5432
+        database: healthcaredb
+        user: postgres
+        password: alloydb
+
+    tools:
+      get_patient_profile:
+        kind: postgres-sql
+        source: healthcare-db
+        description: Retrieves demographic details and general description of a patient by their patient_id.
+        parameters:
+          - name: patient_id
+            type: string
+            description: The unique ID of the patient (e.g., P0001).
+        statement: |
+          SELECT patient_id, name, age, gender, zip_code, description 
+          FROM patients 
+          WHERE patient_id = $1;
+
+      get_patient_conditions:
+        kind: postgres-sql
+        source: healthcare-db
+        description: Retrieves all recorded diagnoses and conditions for a specific patient.
+        parameters:
+          - name: patient_id
+            type: string
+            description: The unique ID of the patient (e.g., P0001).
+        statement: |
+          SELECT diagnosis_id, condition, date, description 
+          FROM diagnoses 
+          WHERE patient_id = $1 
+          ORDER BY date DESC;
+
+      get_patient_treatments:
+        kind: postgres-sql
+        source: healthcare-db
+        description: Retrieves all medications prescribed to a specific patient.
+        parameters:
+          - name: patient_id
+            type: string
+            description: The unique ID of the patient (e.g., P0001).
+        statement: |
+          SELECT medication_id, medication, dosage, description 
+          FROM medications 
+          WHERE patient_id = $1;
+
+      search_patients_by_condition:
+        kind: postgres-sql
+        source: healthcare-db
+        description: Finds patients who have been diagnosed with a specific condition (keyword search).
+        parameters:
+          - name: condition_keyword
+            type: string
+            description: The condition to search for (e.g., Asthma, Diabetes).
+        statement: |
+          SELECT p.patient_id, p.name, d.condition, d.date 
+          FROM patients p
+          JOIN diagnoses d ON p.patient_id = d.patient_id
+          WHERE d.condition ILIKE '%' || $1 || '%';
+
+    toolsets:
+      healthcare-toolset:
+        - get_patient_profile
+        - get_patient_conditions
+        - get_patient_treatments
+        - search_patients_by_condition
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-toolbox
+  namespace: mcp-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-toolbox
+  template:
+    metadata:
+      labels:
+        app: mcp-toolbox
+    spec:
+      containers:
+      - name: mcp-toolbox
+        # The user will build and push this image
+        image: gcr.io/PROJECT_ID_PLACEHOLDER/mcp-toolbox:latest
+        ports:
+        - containerPort: 5000
+          name: http
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/mcp-toolbox
+      volumes:
+      - name: config-volume
+        configMap:
+          name: mcp-tools-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-toolbox
+  namespace: mcp-system
+spec:
+  selector:
+    app: mcp-toolbox
+  ports:
+  - protocol: TCP
+    port: 5000
+    targetPort: 5000
+  type: ClusterIP

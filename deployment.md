@@ -206,3 +206,37 @@ kubectl get pods -n ai-inference
 ```
 > [!NOTE]
 > The deployment includes a post-start hook to automatically pull the `gemma:2b` model. The pod might take a few minutes to show as `Ready` while it downloads the model.
+
+## 10. Verify Reasoning Engine
+
+Test that the LLM is working by executing a prompt directly inside the container:
+
+```bash
+kubectl exec -it $(kubectl get pod -l app=ollama -n ai-inference -o jsonpath='{.items[0].metadata.name}') -n ai-inference -- ollama run gemma:2b "Why is the sky blue?"
+```
+If successful, you should see the AI response streaming in your terminal.
+
+## 11. Deploy MCP Toolbox Bridge
+
+Build and deploy the MCP Toolbox to expose database tools to the agent:
+
+```bash
+# 1. Create namespace for MCP
+kubectl create namespace mcp-system
+
+# 2. Build the Docker image in Cloud Shell
+docker build -t gcr.io/$PROJECT_ID/mcp-toolbox:latest .
+
+# 3. Push the image to Google Container Registry
+docker push gcr.io/$PROJECT_ID/mcp-toolbox:latest
+
+# 4. Update the manifest with your project ID
+# (We use sed to replace the placeholder we left in the file)
+sed -i "s/PROJECT_ID_PLACEHOLDER/$PROJECT_ID/g" k8s/mcp-toolbox.yaml
+
+# 5. Deploy the MCP Toolbox
+kubectl apply -f k8s/mcp-toolbox.yaml
+
+# 6. Verify deployment
+kubectl get pods -n mcp-system
+```
