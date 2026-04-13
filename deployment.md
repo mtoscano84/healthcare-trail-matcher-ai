@@ -300,7 +300,7 @@ To verify the agent locally in Cloud Shell using `adk web`:
     ```
 4.  **Run the agent**:
     ```bash
-    adk web src/agent.py
+    adk web src
     ```
 5.  **Open the Web Preview** in Cloud Shell to interact with the agent!
 

@@ -6,14 +6,13 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-# Installing google-adk with toolbox extra as recommended in KI
 RUN pip install google-adk[toolbox] requests
 
 # Copy agent code
-COPY src/agent.py src/agent.py
+COPY src src
 
 # Expose port for adk web
 EXPOSE 8000
 
-# Run the agent using adk web
-CMD ["adk", "web", "src/agent.py"]
+# Run the agent using adk web pointing to the src directory
+CMD ["adk", "web", "src"]
