@@ -24,11 +24,29 @@ gcloud services enable \
     compute.googleapis.com
 ```
 
-## 2. Create GKE Cluster
+## 2. Create Custom VPC Network
 
-Create the GKE cluster where the application components will run:
+Since we cannot use the default network, we will create a custom VPC and subnet:
+
 ```bash
 export REGION=us-central1
+export NETWORK_NAME=sovereign-ai-net
+export SUBNET_NAME=sovereign-ai-subnet
+
+# Create VPC network
+gcloud compute networks create $NETWORK_NAME --subnet-mode=custom
+
+# Create subnet
+gcloud compute networks subnets create $SUBNET_NAME \
+    --network=$NETWORK_NAME \
+    --range=10.0.0.0/24 \
+    --region=$REGION
+```
+
+## 3. Create GKE Cluster
+
+Create the GKE cluster referencing the custom network and subnet:
+```bash
 export CLUSTER_NAME=sovereign-ai-cluster
 
 gcloud container clusters create $CLUSTER_NAME \
@@ -37,10 +55,12 @@ gcloud container clusters create $CLUSTER_NAME \
     --num-nodes=3 \
     --machine-type=e2-standard-4 \
     --enable-ip-alias \
+    --network=$NETWORK_NAME \
+    --subnetwork=$SUBNET_NAME \
     --scopes="https://www.googleapis.com/auth/cloud-platform"
 ```
 
-## 3. Install AlloyDB Omni Operator
+## 4. Install AlloyDB Omni Operator
 
 Install the operator that manages the AlloyDB Omni database in the cluster:
 ```bash
@@ -62,7 +82,7 @@ helm install alloydbomni-operator oci://gcr.io/alloydb-omni/alloydbomni-operator
     --timeout 5m
 ```
 
-## 4. Generate and Load Data
+## 5. Generate and Load Data
 
 Generate synthetic healthcare data and load it into the database:
 
