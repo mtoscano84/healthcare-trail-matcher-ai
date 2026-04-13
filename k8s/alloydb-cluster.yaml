@@ -15,6 +15,7 @@ metadata:
   namespace: data
 spec:
   databaseVersion: "18.1.0"
+  controlPlaneAgentsVersion: "1.7.0"
   primarySpec:
     adminUser:
       passwordRef:
