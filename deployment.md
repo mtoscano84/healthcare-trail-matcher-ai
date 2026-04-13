@@ -224,17 +224,12 @@ Build and deploy the MCP Toolbox to expose database tools to the agent:
 # 1. Create namespace for MCP
 kubectl create namespace mcp-server
 
-# 2. Build the Docker image in Cloud Shell
-docker build -t gcr.io/$PROJECT_ID/mcp-toolbox:latest .
+# 2. Build and push to Artifact Registry
+gcloud auth configure-docker us-central1-docker.pkg.dev
+docker build -t us-central1-docker.pkg.dev/$PROJECT_ID/healthcare-repo/mcp-toolbox:latest .
+docker push us-central1-docker.pkg.dev/$PROJECT_ID/healthcare-repo/mcp-toolbox:latest
 
-# 3. Push the image to Google Container Registry
-docker push gcr.io/$PROJECT_ID/mcp-toolbox:latest
-
-# 4. Update the manifest with your project ID
-# (We use sed to replace the placeholder we left in the file)
-sed -i "s/PROJECT_ID_PLACEHOLDER/$PROJECT_ID/g" k8s/mcp-toolbox.yaml
-
-# 5. Deploy the MCP Toolbox
+# 3. Deploy the MCP Toolbox
 kubectl apply -f k8s/mcp-toolbox.yaml
 
 # 6. Verify deployment

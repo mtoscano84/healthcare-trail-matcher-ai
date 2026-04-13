@@ -93,7 +93,7 @@ spec:
     spec:
       containers:
       - name: mcp-toolbox
-        image: gcr.io/PROJECT_ID_PLACEHOLDER/mcp-toolbox:latest
+        image: us-central1-docker.pkg.dev/healthcarematcher01/healthcare-repo/mcp-toolbox:latest
         ports:
         - containerPort: 5000
           name: http
