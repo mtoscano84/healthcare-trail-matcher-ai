@@ -4,9 +4,15 @@ This guide details the steps to deploy the "Healthcare Clinical Trial Matcher" i
 
 ## Prerequisites
 
-Ensure you have selected the correct project in Cloud Shell:
+1. **Select Project:** Ensure you have selected the correct project in Cloud Shell:
 ```bash
 gcloud config set project $PROJECT_ID
+```
+
+2. **Clone Repository:** Clone this repository in Cloud Shell to get the manifests and scripts:
+```bash
+git clone https://github.com/mtoscano84/healthcare-trail-matcher-ai.git
+cd healthcare-trail-matcher-ai
 ```
 
 ## 1. Enable Required APIs
