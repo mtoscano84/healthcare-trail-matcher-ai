@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-loader
+  namespace: data
+spec:
+  template:
+    spec:
+      containers:
+      - name: loader
+        image: postgres:15
+        env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-pw-healthcare-db
+              key: healthcare-db
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Waiting for database to be ready..."
+          until pg_isready -h healthcare-db-primary -U postgres; do
+            sleep 5
+          done
+          echo "Database is ready. Creating database healthcaredb if it doesn't exist..."
+          
+          # Create database if it doesn't exist
+          psql -h healthcare-db-primary -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'healthcaredb'" | grep -q 1 || psql -h healthcare-db-primary -U postgres -c "CREATE DATABASE healthcaredb;"
+          
+          echo "Creating tables and loading data in healthcaredb..."
+          
+          psql -h healthcare-db-primary -U postgres -d healthcaredb -c "CREATE TABLE IF NOT EXISTS patients (patient_id TEXT PRIMARY KEY, name TEXT, age INT, gender TEXT, zip_code TEXT);"
+          psql -h healthcare-db-primary -U postgres -d healthcaredb -c "CREATE TABLE IF NOT EXISTS diagnoses (diagnosis_id TEXT PRIMARY KEY, patient_id TEXT, condition TEXT, description TEXT, date DATE);"
+          psql -h healthcare-db-primary -U postgres -d healthcaredb -c "CREATE TABLE IF NOT EXISTS medications (medication_id TEXT PRIMARY KEY, patient_id TEXT, drug_name TEXT, dosage TEXT, date DATE);"
+          
+          # Clear existing data to avoid duplicates if job is rerun
+          psql -h healthcare-db-primary -U postgres -d healthcaredb -c "TRUNCATE patients, diagnoses, medications;"
+          
+          psql -h healthcare-db-primary -U postgres -d healthcaredb -c "\copy patients FROM '/data/patients.csv' DELIMITER ',' CSV HEADER;"
+          psql -h healthcare-db-primary -U postgres -d healthcaredb -c "\copy diagnoses FROM '/data/diagnoses.csv' DELIMITER ',' CSV HEADER;"
+          psql -h healthcare-db-primary -U postgres -d healthcaredb -c "\copy medications FROM '/data/medications.csv' DELIMITER ',' CSV HEADER;"
+          
+          echo "Data loaded successfully."
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+      volumes:
+      - name: data-volume
+        configMap:
+          name: clinical-data
+      restartPolicy: OnFailure

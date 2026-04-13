@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-pw-healthcare-db
+  namespace: data
+type: Opaque
+data:
+  # Password: alloydb (base64 encoded)
+  healthcare-db: "YWxsb3lkYg=="
+---
+apiVersion: alloydbomni.dbadmin.goog/v1
+kind: DBCluster
+metadata:
+  name: healthcare-db
+  namespace: data
+spec:
+  databaseVersion: "18.1.0"
+  primarySpec:
+    adminUser:
+      passwordRef:
+        name: db-pw-healthcare-db
+    resources:
+      cpu: 2
+      memory: 8Gi
+    disks:
+      - name: DataDisk
+        size: 50Gi
