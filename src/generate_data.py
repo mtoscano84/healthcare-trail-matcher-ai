@@ -12,17 +12,22 @@ def generate_patients(n=50):
     zip_codes = ["90210", "10001", "60601", "75201", "33101"]
     patients = []
     for i in range(1, n + 1):
+        age = random.randint(18, 90)
+        gender = random.choice(genders)
+        zip_code = random.choice(zip_codes)
+        desc = f"A {age} year old {gender} residing in zip code {zip_code}."
         patients.append([
             f"P{i:04d}",
             f"Patient_{i}",
-            random.randint(18, 90),
-            random.choice(genders),
-            random.choice(zip_codes)
+            age,
+            gender,
+            zip_code,
+            desc
         ])
     
     with open(os.path.join(output_dir, "patients.csv"), "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["patient_id", "name", "age", "gender", "zip_code"])
+        writer.writerow(["patient_id", "name", "age", "gender", "zip_code", "description"])
         writer.writerows(patients)
     return patients
 
@@ -49,14 +54,14 @@ def generate_diagnoses(patients, max_per_patient=3):
                 f"D{d_id:04d}",
                 p_id,
                 cond,
-                desc,
-                date.strftime("%Y-%m-%d")
+                date.strftime("%Y-%m-%d"),
+                desc
             ])
             d_id += 1
             
     with open(os.path.join(output_dir, "diagnoses.csv"), "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["diagnosis_id", "patient_id", "condition", "description", "date"])
+        writer.writerow(["diagnosis_id", "patient_id", "condition", "date", "description"])
         writer.writerows(diagnoses)
 
 def generate_medications(patients, max_per_patient=4):
@@ -68,18 +73,21 @@ def generate_medications(patients, max_per_patient=4):
         n_meds = random.randint(1, max_per_patient)
         for _ in range(n_meds):
             date = datetime.now() - timedelta(days=random.randint(1, 365*2))
+            drug = random.choice(drugs)
+            dosage = f"{random.choice([10, 20, 50, 100])}mg"
+            desc = f"Prescribed {drug} {dosage} on {date.strftime('%Y-%m-%d')}."
             medications.append([
                 f"M{m_id:04d}",
                 p_id,
-                random.choice(drugs),
-                f"{random.choice([10, 20, 50, 100])}mg",
-                date.strftime("%Y-%m-%d")
+                drug,
+                dosage,
+                desc
             ])
             m_id += 1
             
     with open(os.path.join(output_dir, "medications.csv"), "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["medication_id", "patient_id", "drug_name", "dosage", "date"])
+        writer.writerow(["medication_id", "patient_id", "medication", "dosage", "description"])
         writer.writerows(medications)
 
 if __name__ == "__main__":
