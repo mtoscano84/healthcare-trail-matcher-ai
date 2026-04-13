@@ -9,6 +9,9 @@ spec:
     matchLabels:
       app: ollama
   template:
+    metadata:
+      labels:
+        app: ollama
     spec:
       containers:
       - name: ollama
