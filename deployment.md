@@ -260,3 +260,47 @@ INFO "Initialized 1 sources: healthcare-db"
 INFO "Initialized 4 tools: search_patients_by_condition, get_patient_profile, get_patient_conditions, get_patient_treatments"
 INFO "Server ready to serve!"
 ```
+
+## Clinical Trial Matcher Agent Deployment
+
+After deploying the MCP Toolbox, you can deploy the agent.
+
+### 1. Build and push the Agent image
+
+From the root directory of the project:
+
+```bash
+gcloud auth configure-docker us-central1-docker.pkg.dev
+docker build -t us-central1-docker.pkg.dev/$PROJECT_ID/healthcare-repo/agent:latest -f Dockerfile.agent .
+docker push us-central1-docker.pkg.dev/$PROJECT_ID/healthcare-repo/agent:latest
+```
+
+### 2. Deploy the Agent to GKE
+
+```bash
+kubectl apply -f k8s/agent-deployment.yaml
+```
+
+### 3. Verification & Showcase
+
+To verify the agent locally in Cloud Shell using `adk web`:
+
+1.  **Port-forward the MCP Toolbox** service to localhost:
+    ```bash
+    kubectl port-forward svc/mcp-toolbox 5000:5000 -n mcp-server
+    ```
+2.  **Port-forward the Ollama** service to localhost (in another tab):
+    ```bash
+    kubectl port-forward svc/ollama 11434:11434 -n ai-inference
+    ```
+3.  **Set environment variables** to point to the local ports:
+    ```bash
+    export OLLAMA_URL="http://localhost:11434/v1"
+    export MCP_URL="http://localhost:5000"
+    ```
+4.  **Run the agent**:
+    ```bash
+    adk web src/agent.py
+    ```
+5.  **Open the Web Preview** in Cloud Shell to interact with the agent!
+

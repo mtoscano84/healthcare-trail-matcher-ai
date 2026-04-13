@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clinical-trial-matcher
+  namespace: mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clinical-trial-matcher
+  template:
+    metadata:
+      labels:
+        app: clinical-trial-matcher
+    spec:
+      containers:
+      - name: agent
+        image: us-central1-docker.pkg.dev/healthcarematcher01/healthcare-repo/agent:latest
+        env:
+        - name: OLLAMA_URL
+          value: "http://ollama.ai-inference.svc.cluster.local:11434/v1"
+        - name: MCP_URL
+          value: "http://mcp-toolbox.mcp-server.svc.cluster.local:5000"
+        ports:
+        - containerPort: 8000
+          name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: clinical-trial-matcher
+  namespace: mcp-server
+spec:
+  selector:
+    app: clinical-trial-matcher
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000
+  type: ClusterIP
