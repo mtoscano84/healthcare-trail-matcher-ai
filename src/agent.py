@@ -1,5 +1,5 @@
 import os
-from google.adk.agents import Agent
+from google.adk.agents.llm_agent import Agent
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools.toolbox_toolset import ToolboxToolset
 
@@ -20,7 +20,7 @@ toolbox = ToolboxToolset(
 
 # 2. Initialize the Agent
 # We use LiteLlm to connect to the OpenAI-compatible endpoint of Ollama
-agent = Agent(
+root_agent = Agent(
     model=LiteLlm(
         model="gemma:2b",
         api_base=OLLAMA_URL,
