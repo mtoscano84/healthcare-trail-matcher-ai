@@ -222,7 +222,7 @@ Build and deploy the MCP Toolbox to expose database tools to the agent:
 
 ```bash
 # 1. Create namespace for MCP
-kubectl create namespace mcp-system
+kubectl create namespace mcp-server
 
 # 2. Build the Docker image in Cloud Shell
 docker build -t gcr.io/$PROJECT_ID/mcp-toolbox:latest .
@@ -238,5 +238,5 @@ sed -i "s/PROJECT_ID_PLACEHOLDER/$PROJECT_ID/g" k8s/mcp-toolbox.yaml
 kubectl apply -f k8s/mcp-toolbox.yaml
 
 # 6. Verify deployment
-kubectl get pods -n mcp-system
+kubectl get pods -n mcp-server
 ```

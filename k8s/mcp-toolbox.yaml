@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: mcp-tools-config
-  namespace: mcp-system
+  namespace: mcp-server
 data:
   tools.yaml: |
     sources:
@@ -80,7 +80,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mcp-toolbox
-  namespace: mcp-system
+  namespace: mcp-server
 spec:
   replicas: 1
   selector:
@@ -93,7 +93,6 @@ spec:
     spec:
       containers:
       - name: mcp-toolbox
-        # The user will build and push this image
         image: gcr.io/PROJECT_ID_PLACEHOLDER/mcp-toolbox:latest
         ports:
         - containerPort: 5000
@@ -110,7 +109,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mcp-toolbox
-  namespace: mcp-system
+  namespace: mcp-server
 spec:
   selector:
     app: mcp-toolbox
