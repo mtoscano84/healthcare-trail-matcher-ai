@@ -218,20 +218,45 @@ If successful, you should see the AI response streaming in your terminal.
 
 ## 11. Deploy MCP Toolbox Bridge
 
-Build and deploy the MCP Toolbox to expose database tools to the agent:
+Build and deploy the MCP Toolbox to expose database tools to the agent. We use Artifact Registry as GCR is deprecated.
 
 ```bash
 # 1. Create namespace for MCP
 kubectl create namespace mcp-server
 
-# 2. Build and push to Artifact Registry
+# 2. Enable Artifact Registry API and create repo
+gcloud services enable artifactregistry.googleapis.com
+gcloud artifacts repositories create healthcare-repo \
+    --repository-format=docker \
+    --location=us-central1 \
+    --description="Healthcare AI repo"
+
+# 3. Grant Artifact Registry Reader role to GKE default service account
+export PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+    --role="roles/artifactregistry.reader"
+
+# 4. Build and push the image
 gcloud auth configure-docker us-central1-docker.pkg.dev
 docker build -t us-central1-docker.pkg.dev/$PROJECT_ID/healthcare-repo/mcp-toolbox:latest .
 docker push us-central1-docker.pkg.dev/$PROJECT_ID/healthcare-repo/mcp-toolbox:latest
 
-# 3. Deploy the MCP Toolbox
+# 5. Deploy the MCP Toolbox
 kubectl apply -f k8s/mcp-toolbox.yaml
+```
 
-# 6. Verify deployment
-kubectl get pods -n mcp-server
+### Validation
+
+Verify that the MCP server started correctly and loaded the tools:
+
+```bash
+kubectl logs -l app=mcp-toolbox -n mcp-server
+```
+
+You should see output similar to:
+```
+INFO "Initialized 1 sources: healthcare-db"
+INFO "Initialized 4 tools: search_patients_by_condition, get_patient_profile, get_patient_conditions, get_patient_treatments"
+INFO "Server ready to serve!"
 ```
