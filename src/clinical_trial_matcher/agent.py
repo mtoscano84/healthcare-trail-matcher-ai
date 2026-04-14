@@ -5,7 +5,7 @@ from google.adk.tools.toolbox_toolset import ToolboxToolset
 
 # Configure endpoints via environment variables for flexibility
 # Defaults are for in-cluster communication
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://ollama.ai-inference.svc.cluster.local:11434/v1")
+OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://ollama.ai-inference.svc.cluster.local:11434")
 MCP_URL = os.environ.get("MCP_URL", "http://mcp-toolbox.mcp-server.svc.cluster.local:5000")
 
 print(f"Connecting to Ollama at: {OLLAMA_URL}")
