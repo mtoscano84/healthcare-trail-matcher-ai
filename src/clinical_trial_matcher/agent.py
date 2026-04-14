@@ -22,7 +22,7 @@ toolbox = ToolboxToolset(
 # We use LiteLlm to connect to the OpenAI-compatible endpoint of Ollama
 root_agent = Agent(
     model=LiteLlm(
-        model="gemma:2b",
+        model="ollama/gemma:2b",
         api_base=OLLAMA_URL,
         extra_body={
             "skip_special_tokens": False
