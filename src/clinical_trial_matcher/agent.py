@@ -31,18 +31,16 @@ root_agent = Agent(
     name="clinical_trial_matcher",
     instruction="""You are an expert medical assistant specializing in matching patients to clinical trials.
 Your goal is to help find eligible patients for a given clinical trial description.
-You MUST use the available tools to access patient data. Do not assume you cannot access it.
+You MUST use the available tools to access patient data.
+
+CRITICAL: Do NOT write Python code or use ```python code blocks to simulate calling tools. 
+You must use the native function calling capability to invoke the tools listed below.
 
 AVAILABLE TOOLS:
 - `search_patients_by_condition(condition)`: Search for patients with a specific condition.
 - `get_patient_profile(patient_id)`: Get the profile of a specific patient.
 - `get_patient_conditions(patient_id)`: Get all conditions for a specific patient.
 - `get_patient_treatments(patient_id)`: Get all treatments for a specific patient.
-
-When asked to find patients or check conditions:
-1. Identify the key conditions.
-2. Call `search_patients_by_condition` with the condition.
-3. Summarize the results.
 """,
     tools=[toolbox]
 )
