@@ -29,11 +29,6 @@ spec:
         volumeMounts:
         - name: ollama-storage
           mountPath: /root/.ollama
-        # Pre-pull the gemma:2b model on startup
-        lifecycle:
-          postStart:
-            exec:
-              command: ["/bin/sh", "-c", "ollama run gemma:2b 'hello'"]
       volumes:
       - name: ollama-storage
         emptyDir: {}
