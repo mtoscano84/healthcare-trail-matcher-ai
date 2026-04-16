@@ -22,10 +22,10 @@ spec:
         resources:
           requests:
             cpu: "2"
-            memory: "4Gi"
+            memory: "8Gi"
           limits:
             cpu: "3"
-            memory: "6Gi"
+            memory: "12Gi"
         volumeMounts:
         - name: ollama-storage
           mountPath: /root/.ollama
