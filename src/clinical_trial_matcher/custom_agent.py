@@ -12,29 +12,15 @@ logging.basicConfig(level=logging.INFO)
 os.environ["MCP_URL"] = "http://localhost:5000"
 os.environ["OLLAMA_URL"] = "http://localhost:11434"
 
-# Define the tool declarations for Gemma 4 as per official documentation
-tool_declarations = """
-<|tool>declaration:search_patients_by_condition{description:"Finds patients who have been diagnosed with a specific condition (keyword search).",parameters:{properties:{condition_keyword:{description:"The condition to search for (e.g., Asthma, Diabetes).",type:"STRING"}},required:["condition_keyword"],type:"OBJECT"} }<tool|>
-<|tool>declaration:get_patient_profile{description:"Retrieves demographic details and general description of a patient by their patient_id.",parameters:{properties:{patient_id:{description:"The unique ID of the patient (e.g., P0001).",type:"STRING"}},required:["patient_id"],type:"OBJECT"} }<tool|>
-<|tool>declaration:get_patient_conditions{description:"Retrieves all recorded diagnoses and conditions for a specific patient.",parameters:{properties:{patient_id:{description:"The unique ID of the patient (e.g., P0001).",type:"STRING"}},required:["patient_id"],type:"OBJECT"} }<tool|>
-<|tool>declaration:get_patient_treatments{description:"Retrieves all medications prescribed to a specific patient.",parameters:{properties:{patient_id:{description:"The unique ID of the patient (e.g., P0001).",type:"STRING"}},required:["patient_id"],type:"OBJECT"} }<tool|>
-"""
+# Define the tool declarations for Gemma 4 as single lines without internal newlines
+tool_declarations = """<|tool>declaration:search_patients_by_condition{description:"Finds patients who have been diagnosed with a specific condition (keyword search).",parameters:{properties:{condition_keyword:{description:"The condition to search for (e.g., Asthma, Diabetes).",type:"STRING"}},required:["condition_keyword"],type:"OBJECT"} }<tool|><|tool>declaration:get_patient_profile{description:"Retrieves demographic details and general description of a patient by their patient_id.",parameters:{properties:{patient_id:{description:"The unique ID of the patient (e.g., P0001).",type:"STRING"}},required:["patient_id"],type:"OBJECT"} }<tool|><|tool>declaration:get_patient_conditions{description:"Retrieves all recorded diagnoses and conditions for a specific patient.",parameters:{properties:{patient_id:{description:"The unique ID of the patient (e.g., P0001).",type:"STRING"}},required:["patient_id"],type:"OBJECT"} }<tool|><|tool>declaration:get_patient_treatments{description:"Retrieves all medications prescribed to a specific patient.",parameters:{properties:{patient_id:{description:"The unique ID of the patient (e.g., P0001).",type:"STRING"}},required:["patient_id"],type:"OBJECT"} }<tool|>"""
 
-# Construct the prompt using the exact Gemma 4 chat template tags from the documentation
-prompt_text = f"""<bos><|turn>system
-You are an expert medical assistant specializing in matching patients to clinical trials.
-Your goal is to help find eligible patients for a given clinical trial description.
-You MUST use the available tools to access patient data.
-
-{tool_declarations.strip()}
-<turn|><|turn>user
-Find all patients who have been diagnosed with Diabetes.
-<turn|><|turn>model
-"""
+# Construct the prompt as a single line string, exactly as shown in the documentation example
+prompt_text = f"<bos><|turn>system You are an expert medical assistant specializing in matching patients to clinical trials. Your goal is to help find eligible patients for a given clinical trial description. You MUST use the available tools to access patient data. {tool_declarations} <turn|> <|turn>user Find all patients who have been diagnosed with Diabetes. <turn|> <|turn>model"
 
 async def main():
     print("User: Find all patients who have been diagnosed with Diabetes.")
-    print("Sending request directly to Ollama API (bypassing LiteLLM)...")
+    print("Sending request directly to Ollama API (single-line prompt)...")
     
     async with httpx.AsyncClient() as client:
         response = await client.post(
@@ -52,6 +38,8 @@ async def main():
         return
         
     res_json = response.json()
+    print(f"\nFull JSON Response from Ollama:\n{json.dumps(res_json, indent=2)}")
+    
     output = res_json.get("response", "")
     print(f"\nModel Raw Response:\n{output}")
     
