@@ -12,6 +12,9 @@ async def main():
     print("Initializing runner...")
     runner = InMemoryRunner(agent=root_agent)
     
+    # Create the session before running
+    await runner.create_session(session_id="test_session", user_id="test_user")
+    
     message = "Find all patients who have been diagnosed with Diabetes."
     print(f"Sending message: {message}")
     
