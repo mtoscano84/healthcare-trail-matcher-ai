@@ -12,22 +12,60 @@ logging.basicConfig(level=logging.INFO)
 os.environ["MCP_URL"] = "http://localhost:5000"
 os.environ["OLLAMA_URL"] = "http://localhost:11434"
 
-# Define the tool declarations for Gemma 4 as single lines without internal newlines
-tool_declarations = """<|tool>declaration:search_patients_by_condition{description:"Finds patients who have been diagnosed with a specific condition (keyword search).",parameters:{properties:{condition_keyword:{description:"The condition to search for (e.g., Asthma, Diabetes).",type:"STRING"}},required:["condition_keyword"],type:"OBJECT"} }<tool|><|tool>declaration:get_patient_profile{description:"Retrieves demographic details and general description of a patient by their patient_id.",parameters:{properties:{patient_id:{description:"The unique ID of the patient (e.g., P0001).",type:"STRING"}},required:["patient_id"],type:"OBJECT"} }<tool|><|tool>declaration:get_patient_conditions{description:"Retrieves all recorded diagnoses and conditions for a specific patient.",parameters:{properties:{patient_id:{description:"The unique ID of the patient (e.g., P0001).",type:"STRING"}},required:["patient_id"],type:"OBJECT"} }<tool|><|tool>declaration:get_patient_treatments{description:"Retrieves all medications prescribed to a specific patient.",parameters:{properties:{patient_id:{description:"The unique ID of the patient (e.g., P0001).",type:"STRING"}},required:["patient_id"],type:"OBJECT"} }<tool|>"""
-
-# Construct the prompt as a single line string, exactly as shown in the documentation example
-prompt_text = f"<bos><|turn>system You are an expert medical assistant specializing in matching patients to clinical trials. Your goal is to help find eligible patients for a given clinical trial description. You MUST use the available tools to access patient data. {tool_declarations} <turn|> <|turn>user Find all patients who have been diagnosed with Diabetes. <turn|> <|turn>model"
+# Define the tools in OpenAI format for Ollama /api/chat
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "search_patients_by_condition",
+            "description": "Finds patients who have been diagnosed with a specific condition (keyword search).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "condition_keyword": {
+                        "type": "string",
+                        "description": "The condition to search for (e.g., Asthma, Diabetes)."
+                    }
+                },
+                "required": ["condition_keyword"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_patient_profile",
+            "description": "Retrieves demographic details and general description of a patient by their patient_id.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "patient_id": {
+                        "type": "string",
+                        "description": "The unique ID of the patient (e.g., P0001)."
+                    }
+                },
+                "required": ["patient_id"]
+            }
+        }
+    }
+]
 
 async def main():
     print("User: Find all patients who have been diagnosed with Diabetes.")
-    print("Sending request directly to Ollama API (single-line prompt)...")
+    print("Sending request to Ollama /api/chat with tools...")
+    
+    messages = [
+        {"role": "system", "content": "You are an expert medical assistant specializing in matching patients to clinical trials. You MUST use the available tools to access patient data."},
+        {"role": "user", "content": "Find all patients who have been diagnosed with Diabetes."}
+    ]
     
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            "http://localhost:11434/api/generate",
+            "http://localhost:11434/api/chat",
             json={
                 "model": "gemma4:e2b",
-                "prompt": prompt_text,
+                "messages": messages,
+                "tools": tools,
                 "stream": False
             },
             timeout=300.0
@@ -40,31 +78,27 @@ async def main():
     res_json = response.json()
     print(f"\nFull JSON Response from Ollama:\n{json.dumps(res_json, indent=2)}")
     
-    output = res_json.get("response", "")
-    print(f"\nModel Raw Response:\n{output}")
-    
-    # Parse tool calls using the regex from Gemma 4 docs
-    tool_calls = re.findall(r"<\|tool_call>call:(\w+)\{(.*?)\}<tool_call\|>", output, re.DOTALL)
+    message = res_json.get("message", {})
+    content = message.get("content", "")
+    tool_calls = message.get("tool_calls", [])
     
     if tool_calls:
         print(f"\n!!! Tool Call Detected !!!")
-        for name, args in tool_calls:
+        for tool_call in tool_calls:
+            function = tool_call.get("function", {})
+            name = function.get("name")
+            args = function.get("arguments")
             print(f"Tool Name: {name}")
-            print(f"Raw Arguments: {args}")
+            print(f"Arguments: {args}")
             
-            # Extract argument value (handling the special <|"|> string wrappers if present)
-            # Example: condition_keyword:<|"|>Diabetes<|"|>
-            val_match = re.search(r'condition_keyword:(?:<\|"\|>)?([^<,}]+)(?:<\|"\|>)?', args)
-            if val_match:
-                condition = val_match.group(1).strip()
-                print(f"Parsed Argument 'condition_keyword': {condition}")
-                
+            if name == "search_patients_by_condition":
+                condition = args.get("condition_keyword")
                 print(f"\n[ACTION] I would now call the MCP tool '{name}' with condition='{condition}'")
-                print("To complete the loop, we would send the tool output back to the model.")
-            else:
-                print("Could not parse arguments.")
+    elif content:
+        print(f"\nModel Response Content:\n{content}")
     else:
-        print("\nNo tool calls detected in the special Gemma format.")
+        print("\nNo content and no tool calls returned.")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
