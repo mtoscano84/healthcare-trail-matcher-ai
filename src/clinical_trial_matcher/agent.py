@@ -26,11 +26,10 @@ toolbox = ToolboxToolset(
 # We use LiteLlm to connect to the OpenAI-compatible endpoint of Ollama
 root_agent = Agent(
     model=LiteLlm(
-        model="ollama_chat/gemma4:e2b",
-        api_base=OLLAMA_URL,
-        extra_body={
-            "skip_special_tokens": False
-        }
+        model="gemma4:e2b",
+        api_base=f"{OLLAMA_URL}/v1",
+        custom_llm_provider="openai",
+        api_key="not-needed"
     ),
     name="clinical_trial_matcher",
     instruction="""You are an expert medical assistant specializing in matching patients to clinical trials.
