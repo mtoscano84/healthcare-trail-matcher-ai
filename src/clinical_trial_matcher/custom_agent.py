@@ -20,29 +20,25 @@ tool_declarations = """
 <|tool>declaration:get_patient_treatments{description:"Retrieves all medications prescribed to a specific patient.",parameters:{properties:{patient_id:{description:"The unique ID of the patient (e.g., P0001).",type:"STRING"}},required:["patient_id"],type:"OBJECT"} }<tool|>
 """
 
-# Construct the system prompt with the declarations
-system_prompt = f"""You are an expert medical assistant specializing in matching patients to clinical trials.
+# Construct the prompt using the exact Gemma 4 chat template tags from the documentation
+prompt_text = f"""<bos><|turn>system
+You are an expert medical assistant specializing in matching patients to clinical trials.
 Your goal is to help find eligible patients for a given clinical trial description.
 You MUST use the available tools to access patient data.
 
-{tool_declarations}
-
-To call a tool, you MUST output: <|tool_call>call:tool_name{{param:value}}<tool_call|>
+{tool_declarations.strip()}
+<turn|><|turn>user
+Find all patients who have been diagnosed with Diabetes.
+<turn|><|turn>model
 """
 
 async def main():
-    prompt = "Find all patients who have been diagnosed with Diabetes."
-    print(f"User: {prompt}")
+    print("User: Find all patients who have been diagnosed with Diabetes.")
+    print("Sending request to Gemma 4 via Ollama (using raw prompt with Gemma tags)...")
     
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": prompt}
-    ]
-    
-    print("Sending request to Gemma 4 via Ollama...")
     response = await acompletion(
         model="ollama/gemma4:e2b",
-        messages=messages,
+        prompt=prompt_text,
         api_base="http://localhost:11434",
         extra_body={"skip_special_tokens": False}
     )
