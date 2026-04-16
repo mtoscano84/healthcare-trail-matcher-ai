@@ -2,7 +2,11 @@ import os
 import re
 import json
 import asyncio
+import logging
 from litellm import acompletion
+
+# Enable debug logging to see raw Ollama responses
+logging.basicConfig(level=logging.DEBUG)
 
 # Set environment variables for local testing
 os.environ["MCP_URL"] = "http://localhost:5000"
