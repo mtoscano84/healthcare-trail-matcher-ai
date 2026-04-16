@@ -26,7 +26,7 @@ toolbox = ToolboxToolset(
 # We use LiteLlm to connect to the OpenAI-compatible endpoint of Ollama
 root_agent = Agent(
     model=LiteLlm(
-        model="ollama/gemma4:e2b",
+        model="ollama_chat/gemma4:e2b",
         api_base=OLLAMA_URL,
         extra_body={
             "skip_special_tokens": False
@@ -37,14 +37,22 @@ root_agent = Agent(
 Your goal is to help find eligible patients for a given clinical trial description.
 You MUST use the available tools to access patient data.
 
-CRITICAL: Do NOT write Python code or use ```python code blocks to simulate calling tools. 
-You must use the native function calling capability to invoke the tools listed below.
+To call a tool, you MUST output a JSON object with the following structure:
+```json
+{
+  "name": "tool_name",
+  "parameters": {
+    "param_name": "value"
+  }
+}
+```
+Do NOT output any text before or after the JSON object when calling a tool.
 
 AVAILABLE TOOLS:
-- `search_patients_by_condition(condition)`: Search for patients with a specific condition.
-- `get_patient_profile(patient_id)`: Get the profile of a specific patient.
-- `get_patient_conditions(patient_id)`: Get all conditions for a specific patient.
-- `get_patient_treatments(patient_id)`: Get all treatments for a specific patient.
+- `search_patients_by_condition` (condition): Search for patients with a specific condition.
+- `get_patient_profile` (patient_id): Get the profile of a specific patient.
+- `get_patient_conditions` (patient_id)`: Get all conditions for a specific patient.
+- `get_patient_treatments` (patient_id)`: Get all treatments for a specific patient.
 """,
     tools=[toolbox]
 )
