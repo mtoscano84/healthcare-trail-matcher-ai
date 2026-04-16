@@ -1,7 +1,11 @@
 import os
+import logging
 from google.adk.agents.llm_agent import Agent
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools.toolbox_toolset import ToolboxToolset
+
+# Enable debug logging to see traces in the terminal
+logging.basicConfig(level=logging.DEBUG)
 
 # Configure endpoints via environment variables for flexibility
 # Defaults are for in-cluster communication
