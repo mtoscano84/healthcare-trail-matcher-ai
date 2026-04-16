@@ -5,7 +5,7 @@ os.environ["OLLAMA_URL"] = "http://localhost:11434"
 
 import asyncio
 from src.clinical_trial_matcher.agent import root_agent
-from google.adk.runners.in_memory_runner import InMemoryRunner
+from google.adk.runners import InMemoryRunner
 from google.genai.types import Part, UserContent
 
 async def main():
