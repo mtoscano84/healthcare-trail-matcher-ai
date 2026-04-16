@@ -3,10 +3,10 @@ import re
 import json
 import asyncio
 import logging
-from litellm import acompletion
+import httpx
 
-# Enable debug logging to see raw Ollama responses
-logging.basicConfig(level=logging.DEBUG)
+# Enable debug logging
+logging.basicConfig(level=logging.INFO)
 
 # Set environment variables for local testing
 os.environ["MCP_URL"] = "http://localhost:5000"
@@ -34,16 +34,25 @@ Find all patients who have been diagnosed with Diabetes.
 
 async def main():
     print("User: Find all patients who have been diagnosed with Diabetes.")
-    print("Sending request to Gemma 4 via Ollama (using raw prompt with Gemma tags)...")
+    print("Sending request directly to Ollama API (bypassing LiteLLM)...")
     
-    response = await acompletion(
-        model="ollama/gemma4:e2b",
-        prompt=prompt_text,
-        api_base="http://localhost:11434",
-        extra_body={"skip_special_tokens": False}
-    )
-    
-    output = response.choices[0].message.content
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "http://localhost:11434/api/generate",
+            json={
+                "model": "gemma4:e2b",
+                "prompt": prompt_text,
+                "stream": False
+            },
+            timeout=60.0
+        )
+        
+    if response.status_code != 200:
+        print(f"Error from Ollama: {response.status_code} - {response.text}")
+        return
+        
+    res_json = response.json()
+    output = res_json.get("response", "")
     print(f"\nModel Raw Response:\n{output}")
     
     # Parse tool calls using the regex from Gemma 4 docs
