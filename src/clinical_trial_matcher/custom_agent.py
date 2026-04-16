@@ -44,7 +44,7 @@ async def main():
                 "prompt": prompt_text,
                 "stream": False
             },
-            timeout=60.0
+            timeout=300.0
         )
         
     if response.status_code != 200:
